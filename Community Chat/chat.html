@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lounge – Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <meta name="theme-color" content="#0B0F19">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- LEFT: rooms + current user -->
+    <aside class="sidebar" aria-label="Rooms">
+      <h1 class="brand"><img class="brand-logo" src="img/logo.svg" alt="" width="40" height="40"><span>Lounge</span></h1>
+      <div class="side-head">
+        <span>Public rooms</span>
+        <button type="button" class="btn btn-ghost icon-btn" id="new-room-btn" hidden aria-label="Create a public room" title="Create a public room (admin only)">+</button>
+      </div>
+      <nav aria-label="Room list">
+        <ul class="room-list" id="room-list"></ul>
+      </nav>
+      <section class="invite-box" id="invite-section" hidden aria-label="Invitations">
+        <h3>Invitations</h3>
+        <ul id="invite-list"></ul>
+      </section>
+      <div class="me">
+        <button type="button" class="avatar avatar-btn" id="me-avatar" aria-label="Edit profile photo" title="Edit profile"></button>
+        <div class="me-text">
+          <strong id="me-name"></strong>
+          <small id="me-role"></small>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="logout-btn">Log out</button>
+      </div>
+    </aside>
+
+    <!-- MIDDLE: messages -->
+    <main class="chat">
+      <header class="chat-head">
+        <button type="button" class="btn btn-ghost icon-btn" id="menu-btn" aria-label="Show rooms">☰</button>
+        <div class="chat-title">
+          <h2 id="room-title">Loading…</h2>
+          <p id="room-desc"></p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="members-btn" hidden>Members</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="admin-btn" hidden>Admin</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="people-btn">
+          Online (<span class="online-count">0</span>)
+        </button>
+      </header>
+
+      <div class="feed" id="feed" role="log" aria-live="polite" aria-label="Messages">
+        <p class="empty">Loading messages…</p>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <input id="message-input" type="text" maxlength="1000" placeholder="Write a message" aria-label="Message" required>
+        <button type="submit" class="btn btn-primary" id="send-btn">Send</button>
+      </form>
+    </main>
+
+    <!-- RIGHT: who is online -->
+    <aside class="roster" aria-label="Online users">
+      <h3>Online now (<span class="online-count">0</span>)</h3>
+      <ul id="roster-list"></ul>
+    </aside>
+
+  </div>
+
+  <!-- Dark overlay behind the drawers on phones -->
+  <div class="scrim" id="scrim"></div>
+
+  <!-- Create-room dialog -->
+  <dialog class="dialog" id="room-dialog" aria-labelledby="room-dialog-title">
+    <form id="room-form" novalidate>
+      <h2 id="room-dialog-title">Create a room</h2>
+      <p class="hint" id="room-dialog-hint"></p>
+      <div class="field">
+        <label for="room-name">Name</label>
+        <input id="room-name" maxlength="24" placeholder="study-group" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="room-desc-input">Description <span class="optional">(optional)</span></label>
+        <input id="room-desc-input" maxlength="80" placeholder="What is this room for?" autocomplete="off">
+      </div>
+      <p class="field-error" id="room-error" role="alert"></p>
+      <div class="dialog-actions">
+        <button type="button" class="btn btn-ghost" id="room-cancel">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="room-submit">Create room</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Profile photo dialog -->
+  <dialog class="dialog" id="profile-dialog" aria-labelledby="profile-title">
+    <h2 id="profile-title">Your profile</h2>
+    <p class="hint">Your photo shows next to your messages.</p>
+    <div class="profile-row">
+      <span class="avatar avatar-lg" id="profile-avatar"></span>
+      <div>
+        <strong id="profile-name"></strong>
+        <p class="hint" id="profile-role"></p>
+      </div>
+    </div>
+    <input type="file" id="avatar-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+    <p class="field-error" id="profile-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="avatar-remove">Remove photo</button>
+      <button type="button" class="btn btn-primary" id="avatar-change">Upload photo</button>
+      <button type="button" class="btn btn-ghost" id="profile-close">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Admin tools dialog -->
+  <dialog class="dialog" id="admin-dialog" aria-labelledby="admin-title">
+    <h2 id="admin-title">Admin tools</h2>
+    <p class="hint">These actions permanently delete messages for everyone.</p>
+    <div class="danger-box">
+      <div>
+        <strong>Clear <span id="clear-room-name"></span></strong>
+        <p class="hint">Deletes every message in this room.</p>
+      </div>
+      <button type="button" class="btn btn-danger btn-sm" id="clear-room-btn">Clear room</button>
+    </div>
+    <div class="danger-box column">
+      <div>
+        <strong>Reset entire chat</strong>
+        <p class="hint">Deletes all messages in all public rooms. Rooms, private groups and accounts stay.</p>
+      </div>
+      <div class="reset-row">
+        <input id="reset-confirm" placeholder="Type RESET to confirm" autocomplete="off" aria-label="Type RESET to confirm">
+        <button type="button" class="btn btn-danger btn-sm" id="reset-btn" disabled>Reset all</button>
+      </div>
+    </div>
+    <p class="field-error" id="admin-error" role="alert"></p>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="admin-close">Close</button>
+    </div>
+  </dialog>
+
+  <!-- Private group members + invitations -->
+  <dialog class="dialog" id="members-dialog" aria-labelledby="members-title">
+    <h2 id="members-title">Members</h2>
+    <p class="hint">People in this private group.</p>
+    <ul id="member-list"></ul>
+    <form id="invite-form" novalidate>
+      <div class="field">
+        <label for="invite-username">Invite by username</label>
+        <input id="invite-username" placeholder="exact username" autocomplete="off" spellcheck="false" autocapitalize="none">
+      </div>
+      <p class="field-error" id="invite-error" role="alert"></p>
+      <button type="submit" class="btn btn-primary btn-sm">Send invitation</button>
+    </form>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-ghost" id="members-close">Close</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="js/chat.js"></script>
+</body>
+</html>
