@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lounge – Log in or register</title>
+  <meta name="description" content="Lounge is a real-time community chat with topic rooms.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+  <meta name="theme-color" content="#0B0F19">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page">
+
+  <main class="auth-card">
+    <h1 class="brand"><img class="brand-logo" src="img/logo.svg" alt="" width="40" height="40"><span>Lounge</span></h1>
+    <p class="lede">Rooms for your community, live.</p>
+
+    <div class="tabs" role="tablist" aria-label="Log in or register">
+      <button type="button" class="tab" role="tab" data-mode="login" aria-selected="true">Log in</button>
+      <button type="button" class="tab" role="tab" data-mode="register" aria-selected="false">Register</button>
+    </div>
+
+    <form id="auth-form" novalidate>
+      <div class="field" id="username-field" hidden>
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" maxlength="15" autocomplete="username" spellcheck="false" autocapitalize="none">
+        <p class="field-error" id="username-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" spellcheck="false" autocapitalize="none">
+        <p class="field-error" id="email-error"></p>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password">
+        <p class="field-error" id="password-error"></p>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn btn-primary">Log in</button>
+      <p class="form-message" id="form-message" role="alert"></p>
+    </form>
+  </main>
+
+  <script type="module" src="js/auth-page.js"></script>
+</body>
+</html>
